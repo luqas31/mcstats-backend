@@ -2,6 +2,9 @@ import express from 'express';
 import mysql2 from 'mysql2';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import bcrypt from 'bcrypt';
+
+const saltRounds = 10;
 
 dotenv.config({ path: './.env' });
 
@@ -30,14 +33,20 @@ app.post('/register', (req, res) => {
 	const email = req.body.email;
 	const password = req.body.password;
 
-	const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
-	db.query(query, [email, password], (error, results) => {
+	bcrypt.hash(password, saltRounds, (error, hash) => {
 		if (error) {
-			console.error('Error executing the SQL query:', error);
-			res.status(500).send('Error signing up user!');
-			return;
+			console.log('Error hashing the password:', error);
 		}
-		res.status(200).send('User registered successfully!');
+
+		const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
+		db.query(query, [email, hash], (error, results) => {
+			if (error) {
+				console.error('Error executing the SQL query:', error);
+				res.status(500).send('Error signing up user!');
+				return;
+			}
+			res.status(200).send('User registered successfully!');
+		});
 	});
 });
 
@@ -45,17 +54,23 @@ app.post('/login', (req, res) => {
 	const email = req.body.email;
 	const password = req.body.password;
 
-	const query = 'SELECT * FROM users WHERE email = ? AND password = ?';
+	
 
-	db.query(query, [email, password], (error, results) => {
+	const query = 'SELECT * FROM users WHERE email = ?;';
+
+	db.query(query, password, (error, results) => {
 		if (error) {
 			res.send({ error: error });
 		}
 
 		if (results.length > 0) {
-			res.send(results);
-		} else {
-			res.send({ message: 'Wrong email/password combination' });
+			bcrypt.compare(password, results[0].password, (error, response) => {
+				if (response) {
+					res.send(results);
+				} else {
+					res.send({ message: 'Wrong email/password combination!' });
+				}
+			});
 		}
 	});
 });

@@ -33,19 +33,33 @@ app.post('/register', (req, res) => {
 	const email = req.body.email;
 	const password = req.body.password;
 
-	bcrypt.hash(password, saltRounds, (error, hash) => {
+	const checkEmailQuery = 'SELECT * FROM users WHERE email = ?;';
+	db.query(checkEmailQuery, [email], (error, results) => {
 		if (error) {
-			console.log('Error hashing the password:', error);
+			console.error('Error executing the SQL query:', error);
+			res.status(500).send('Error signing up user!');
+			return;
 		}
 
-		const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
-		db.query(query, [email, hash], (error, results) => {
+		if (results.length > 0) {
+			res.status(400).send('Email already in use!');
+			return;
+		}
+
+		bcrypt.hash(password, saltRounds, (error, hash) => {
 			if (error) {
-				console.error('Error executing the SQL query:', error);
-				res.status(500).send('Error signing up user!');
-				return;
+				console.log('Error hashing the password:', error);
 			}
-			res.status(200).send('User registered successfully!');
+
+			const insertQuery = 'INSERT INTO users (email, password) VALUES (?, ?)';
+			db.query(insertQuery, [email, hash], (error, results) => {
+				if (error) {
+					console.error('Error executing the SQL query:', error);
+					res.status(500).send('Error signing up user!');
+					return;
+				}
+				res.status(200).send('User registered successfully!');
+			});
 		});
 	});
 });
@@ -54,11 +68,9 @@ app.post('/login', (req, res) => {
 	const email = req.body.email;
 	const password = req.body.password;
 
-	
-
 	const query = 'SELECT * FROM users WHERE email = ?;';
 
-	db.query(query, password, (error, results) => {
+	db.query(query, [email], (error, results) => {
 		if (error) {
 			res.send({ error: error });
 		}

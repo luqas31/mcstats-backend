@@ -87,7 +87,30 @@ app.post('/login', (req, res) => {
 	});
 });
 
+app.get('/player-stats', (req, res) => {
+	const nick = req.query.nick;
+
+
+	const query = 'SELECT kills, deaths FROM projetolucas.stats WHERE nick =?;';
+
+	db.query(query, [nick], (error, results) => {
+		if (error) {
+			console.error('Error executing the SQL query:', error);
+			res.status(500).send('Error fetching player stats!');
+			return;
+		}
+
+		if (results.length > 0) {
+			res.send(results[0]);
+		} else {
+			res.status(404).send('Player not found!');
+		}
+	});
+});
+
 const PORT = 3333;
 app.listen(PORT, () => {
 	console.log(`Servidor Express rodando na porta ${PORT}`);
 });
+
+

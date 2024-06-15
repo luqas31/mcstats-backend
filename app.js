@@ -80,16 +80,17 @@ app.post('/login', (req, res) => {
 				if (response) {
 					res.send(results);
 				} else {
-					res.send({ message: 'Wrong email/password combination!' });
+					res.status(401).send({ message: 'Wrong email/password combination!' });
 				}
 			});
+		} else {
+			res.status(404).send({ message: 'User not found!' });
 		}
 	});
 });
 
 app.get('/player-stats', (req, res) => {
 	const nick = req.query.nick;
-
 
 	const query = 'SELECT kills, deaths FROM projetolucas.stats WHERE nick =?;';
 
@@ -112,5 +113,3 @@ const PORT = 3333;
 app.listen(PORT, () => {
 	console.log(`Servidor Express rodando na porta ${PORT}`);
 });
-
-

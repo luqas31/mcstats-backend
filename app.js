@@ -136,6 +136,20 @@ app.get('/player-stats', (req, res) => {
 	});
 });
 
+app.get('/player-ranking', (req, res) => {
+	const query = 'SELECT nick, kills, deaths FROM projetolucas.stats ORDER BY kills DESC LIMIT 3;';
+
+	db.query(query, (error, results) => {
+		if (error) {
+			console.error('Error executing the SQL query:', error);
+			res.status(500).send('Error fetching player ranking!');
+			return;
+		}
+
+		res.send(results);
+	});
+});
+
 const PORT = 3333;
 app.listen(PORT, () => {
 	console.log(`Servidor Express rodando na porta ${PORT}`);

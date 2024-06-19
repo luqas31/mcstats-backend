@@ -3,6 +3,7 @@ import mysql2 from 'mysql2';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
+import JWT from 'jsonwebtoken';
 
 const saltRounds = 10;
 
@@ -64,6 +65,27 @@ app.post('/register', (req, res) => {
 	});
 });
 
+const verifyJWT = (req, res, next) => {
+	const token = req.headers['x-access-token'];
+
+	if (!token) {
+		res.send('We need a token, please give it to us next time!');
+	} else {
+		JWT.verify(token, 'jwtSecret', (error, decoded) => {
+			if (error) {
+				res.json({ auth: false, message: 'You failed to authenticate' });
+			} else {
+				req.userId = decoded.id;
+				next();
+			}
+		});
+	}
+};
+
+app.get('/auth', verifyJWT, (req, res) => {
+	res.send('You are authenticated');
+});
+
 app.post('/login', (req, res) => {
 	const email = req.body.email;
 	const password = req.body.password;
@@ -78,13 +100,18 @@ app.post('/login', (req, res) => {
 		if (results.length > 0) {
 			bcrypt.compare(password, results[0].password, (error, response) => {
 				if (response) {
-					res.send(results);
+					const id = results[0].id;
+					const token = JWT.sign({ id }, 'jwtSecret', {
+						expiresIn: 300,
+					});
+
+					res.json({ auth: true, token: token, results: results });
 				} else {
 					res.status(401).send({ message: 'Wrong email/password combination!' });
 				}
 			});
 		} else {
-			res.status(404).send({ message: 'User not found!' });
+			res.json({ auth: false, message: 'User does not exist!' });
 		}
 	});
 });

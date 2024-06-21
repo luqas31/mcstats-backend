@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
 import JWT from 'jsonwebtoken';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
 
 const saltRounds = 10;
 
@@ -12,7 +15,14 @@ dotenv.config({ path: './.env' });
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+	origin: 'http://localhost:5173',
+	methods: ['GET', 'POST'],
+	credentials: true
+}));
+
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const db = mysql2.createConnection({
 	host: process.env.DATABASE_HOST,

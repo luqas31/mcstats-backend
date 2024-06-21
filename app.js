@@ -24,6 +24,16 @@ app.use(cors({
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(session({
+	key: 'userId',
+	secret: 'maluquicemesmo',
+	resave: false,
+	saveUninitialized: false,
+	cookie: {
+		expires: 60 * 60 * 24,
+	},
+}));
+
 const db = mysql2.createConnection({
 	host: process.env.DATABASE_HOST,
 	user: process.env.DATABASE_USER,
@@ -110,6 +120,8 @@ app.post('/login', (req, res) => {
 		if (results.length > 0) {
 			bcrypt.compare(password, results[0].password, (error, response) => {
 				if (response) {
+					req.session.user = results;
+					console.log(req.session.user);
 					const id = results[0].id;
 					const token = JWT.sign({ id }, 'jwtSecret', {
 						expiresIn: 300,
@@ -124,6 +136,14 @@ app.post('/login', (req, res) => {
 			res.json({ auth: false, message: 'User does not exist!' });
 		}
 	});
+});
+
+app.get('/login', (req, res) => { 
+	if (req.session.user) {
+		res.send({ loggedIn: true, user: req.session.user });
+	} else {
+		res.send({ loggedIn: false });
+	}
 });
 
 app.get('/player-stats', (req, res) => {

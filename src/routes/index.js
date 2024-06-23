@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/authController.js';
+import { registerUser, loginUser, requestPasswordReset, resetPassword } from '../controllers/authController.js';
 import { verifyJWT } from '../middleware/authMiddleware.js';
 import { getPlayerStats, getPlayerRanking } from '../controllers/playerController.js';
 
@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/request-password-reset', requestPasswordReset);
+router.post('/reset-password', resetPassword);
 router.get('/auth', verifyJWT);
 router.get('/login', (req, res) => {
 	if (req.session.user) {

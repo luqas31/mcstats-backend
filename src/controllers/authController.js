@@ -88,7 +88,7 @@ export const requestPasswordReset = (req, res) => {
 	db.query(checkEmailQuery, [email], (error, results) => {
 		if (error) {
 			console.error('Error executing the SQL query:', error);
-		
+
 			res.status(500).json({ message: 'Error requesting password reset!' });
 			return;
 		}
@@ -112,7 +112,7 @@ export const requestPasswordReset = (req, res) => {
 				return;
 			}
 
-			const resetLink = `http://localhost:3333/reset-password?token=${token}`;
+			const resetLink = `http://localhost:5173/#/reset-password?token=${token}`;
 			const mailOptions = {
 				from: 'onyourhandproject@outlook.pt',
 				to: email,
@@ -139,6 +139,8 @@ export const requestPasswordReset = (req, res) => {
 export const resetPassword = (req, res) => {
 	const { token, newPassword } = req.body;
 
+	console.log('Received token:', token);
+
 	const checkTokenQuery = 'SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW();';
 	db.query(checkTokenQuery, [token], (error, results) => {
 		if (error) {
@@ -148,6 +150,7 @@ export const resetPassword = (req, res) => {
 		}
 
 		if (results.length === 0) {
+			console.log('Invalid or expired token');
 			res.status(400).send('Invalid or expired token!');
 			return;
 		}

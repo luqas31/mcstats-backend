@@ -74,10 +74,10 @@ export const loginUser = (req, res) => {
 };
 
 const transporter = nodemailer.createTransport({
-	service: 'Outlook365',
+	service: 'gmail, outlook, or other email service provider',
 	auth: {
-		user: 'onyourhandproject@outlook.pt',
-		pass: 'OnYourHand2024',
+		user: 'theemailyouwanttosendtheresetlink@outlook.com',
+		pass: 'theaccountspassword',
 	},
 });
 
@@ -114,7 +114,7 @@ export const requestPasswordReset = (req, res) => {
 
 			const resetLink = `http://localhost:5173/#/reset-password?token=${token}`;
 			const mailOptions = {
-				from: 'onyourhandproject@outlook.pt',
+				from: 'theemailyouwanttosendtheresetlink@outlook.com',
 				to: email,
 				subject: 'Password Reset Request',
 				text: `You are receiving this email because you (or someone else) has requested the reset of the password for your account.\n\n
